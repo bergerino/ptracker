@@ -1,0 +1,60 @@
+<head>
+    <title>NAM Work Tracker</title>
+    {% load static %}
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/normalize.css' %}">
+    <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/skeleton.css' %}">
+    <link rel="stylesheet" href="{% static 'custom.css' %}">
+</head>
+
+<body>
+    <div style="margin-top: 1em" class="container">
+        <h2 style="text-align: center; margin: auto; padding-top: 2em; padding-bottom: 2em">NAM Work Tracker</h2>
+        <div class="row" style="padding-top: 1.5em; padding-bottom: 8em; text-align: center; margin: auto">
+            <div class="four columns">
+                <a href="{% url 'track1' %}" class="button button-primary">Přehled úkolů</a>
+            </div>
+            <div class="four columns">
+                <a href="{% url 'track2' %}" class="button button-primary">Odpracované hodiny</a>
+            </div>
+            <div class="four columns">
+                <a href="{% url 'track3' %}" class="button button-primary">Časová náročnost projektů</a>
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom: 4em">
+            <div class="three columns">
+                <h5>Důležitá informace</h5>
+            </div>
+            <div class="nine columns">
+                <p>Filtrování je case sensitive. Není sice potřeba zadávat celý vyhledávaný výraz,
+                    respektujte ale háčky, čárky a velká či malá písmena.</p>
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom: 8em">
+            <div class="three columns">
+                <h5>Popis aplikace</h5>
+            </div>
+            <div class="nine columns">
+                <p>Aplikace slouží pro sledování měsíční časové náročnosti úkolů a projektů v rámci firmy.</p>
+                <p>Sledování je možné ve třech režimech:</p>
+                <b><p>1. Pohled - Přehled náročnosti úkolů</p></b>
+                <p>V přehledu náročnosti úkolů můžete sledovat dílčí pracovní úkoly pod jednotlivými projekty,
+                je zde možné vyhledávání.
+                Můžete se podívat kolik času vybraný zaměstnanec strávil plněním všech úkolů bez ohledu na projekt.</p>
+                <p>Další možností je sledování času strávého plněním veškerých úkolů patřící pod určitý projekt, ale bez ohledu na
+                plnitele úkolu</p>
+                <p>Další varianta je kombinace dvou předešlých, takže sledování kolik času strávil určitý zaměstnanec při plnění úkolů
+                pod určitým projektem.</p>
+                <b><p>2. Pohled - Celková odpracovaná doba</p></b>
+                <p>Jedná se pouze o jednoduchou tabulku s informací o odpracované době zaměstnanců s možností vyhledávání</p>
+                <b><p>3. Pohled - Časová náročnost projektu</p></b>
+                <p>Tabulka obsahuje základní informace o projektu, ale především kolik se do projektu investovalo v daném měsíci času</p>
+            </div>
+
+
+        </div>
+
+    </div>
+</body>

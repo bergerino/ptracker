@@ -1,0 +1,54 @@
+ <head>
+    <title>NAM Work Tracker</title>
+    {% load static %}
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/normalize.css' %}">
+    <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/skeleton.css' %}">
+    <link rel="stylesheet" href="{% static 'custom.css' %}">
+</head>
+
+<body>
+    <div style="margin-top: 1em" class="container">
+        <a href="{% url 'index' %}" class="button-primary">Domů </a>-
+        <a href="{% url 'track1' %}" class="button-primary">Náročnost úkolů </a>-
+        <a href="{% url 'track2' %}" class="button-primary">Odpracovaný čas </a>-
+        <a href="{% url 'track3' %}" class="button-primary">Náročnost projektů </a>
+        <div class="heading">
+            <h4>Odpracovaný čas</h4>
+        </div>
+        {% csrf_token %}
+        <form method="get">
+            {{ form }}
+            <br><input style="margin-top: 2em" class="button-primary" type="submit" value="Submit" />
+        </form>
+        <div style="padding-top: 2em; padding-bottom: 2em">
+            {% if name != "" %}
+                <h5>Přehled zaměstnance {{ name }} v {{ month }}. měsíci {{ year }}:</h5>
+            {% else %}
+                <h5>Přehled o všech zaměstnancích v {{ month }}. měsíci {{ year }}:</h5>
+            {% endif %}
+        </div>
+        {% if user_spent %}
+            <table style="margin-bottom: 9em">
+                <thead>
+                    <th>Jméno</th>
+                    <th>Strávený čas [h]</th>
+                </thead>
+                <tbody>
+                    {% for record in user_spent %}
+                        <tr>
+                            <td>{{ record.name }}</td>
+                            <td>{{ record.spent }}</td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td><b>{{ spent_sum }}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        {% else %}
+            <h5>Žádná data nenalezena</h5>
+        {% endif %}
+    </div>
+</body>
