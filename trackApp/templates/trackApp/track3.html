@@ -29,12 +29,12 @@
             {% endif %}
         </div>
         {% if project_spent %}
-            <table style="margin-bottom: 9em">
+            <table id="table1" style="margin-bottom: 9em">
                 <thead>
-                    <th>Projekt</th>
+                    <th onclick="sortTable(0)">Projekt</th>
                     <th>Popis</th>
-                    <th>Tvůrce projektu</th>
-                    <th>Náročnost [h]</th>
+                    <th onclick="sortTable(2)">Tvůrce projektu</th>
+                    <th onclick="sortTable(3)">Náročnost [h]</th>
                 </thead>
                 <tbody>
                     {% for record in project_spent %}
@@ -58,3 +58,55 @@
         {% endif %}
     </div>
 </body>
+<script>
+    function sortTable(n) {
+      var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+      table = document.getElementById("table1");
+      switching = true;
+      dir = "asc";
+      while (switching) {
+        switching = false;
+        rows = table.rows;
+        for (i = 1; i < (rows.length - 2); i++) {
+          shouldSwitch = false;
+          x = rows[i].getElementsByTagName("TD")[n];
+          y = rows[i + 1].getElementsByTagName("TD")[n];
+          if(n == 3){
+            if (dir == "asc") {
+                if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
+                    shouldSwitch = true;
+                    break;
+                  }
+              } else if (dir == "desc") {
+                if (parseFloat(x.innerHTML) > parseFloat(y.innerHTML)) {
+                    shouldSwitch = true;
+                    break;
+                  }
+              }  
+          } else {
+            if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                  }
+              } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                  }
+              }
+          }
+        }
+        if (shouldSwitch) {
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          switchcount ++;
+        } else {
+          if (switchcount == 0 && dir == "asc") {
+            dir = "desc";
+            switching = true;
+          }
+        }
+      }
+    }
+</script>

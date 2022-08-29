@@ -83,6 +83,11 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'db',
         'PORT': 5432,
+        #'NAME': 'gitlabdumptables',
+        #'USER': 'postgres',
+        #'PASSWORD': 'admin',
+        #'HOST': 'localhost',
+        #'PORT': 5432,
     }
 }
 

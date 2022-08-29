@@ -46,7 +46,7 @@ A konečně vytažení databáze z dumpu
 ```
 psql -U postgres -f /home/gitlab_dump_tables.sql gitlabdumptables
 ```
-Při spouštění aplikace přistupujeme na adresu **http://192.168.5.105:8000/ptracker/**
+Při spouštění aplikace přistupujeme na adresu **http://localhost:8000/tracker/**
 
 ## Architektura aplikace
 ![alt text](/architektura.drawio.png)

@@ -2,6 +2,7 @@ from datetime import date
 from django.shortcuts import render
 from .models import Userspentonprojects, Userspent, Projectspent
 from .forms import UserSpentOnProjectForm, UserSpentForm, ProjectSpentForm
+import calendar
 
 def index(request):
     return render(request, 'trackApp/index.html')
@@ -9,8 +10,18 @@ def index(request):
 def track1(request):
     year = date.today().year
     month = date.today().month - 1
-    name = ""
-    project = ""
+    name = request.GET.get('name', '')
+    project = request.GET.get('project', '')
+    sql_query = """select p.name project,
+            i.title issue, 
+            u.name, 
+            replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
+            TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
+            from issues i
+            left join projects p on p.id = i.project_id
+            left join timelogs t on t.issue_id = i.id
+            left join users u on u.id = t.user_id
+            left join notes n on n.id = t.note_id"""
 
     if(request.method=="GET"):
         form = UserSpentOnProjectForm(request.GET)
@@ -22,78 +33,36 @@ def track1(request):
             project = form.cleaned_data['project']
 
 
-    user_spent_on_project = Userspentonprojects.objects.raw(
-        '''select 1 as id,
-            p.name project,
-            i.title issue, 
-            u.name, 
-            replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
-            TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
-            from issues i
-            left join projects p on p.id = i.project_id
-            left join timelogs t on t.issue_id = i.id
-            left join users u on u.id = t.user_id
-            left join notes n on n.id = t.note_id
-            where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59'
-            order by 5, 1, 2''', [year, month, year, month]
+    user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
+        ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59'
+            order by 5''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
     )
     if name is not "" and project is "":
         name = '%' + name + '%'
 
-        user_spent_on_project = Userspentonprojects.objects.raw(
-            '''select 1 as id,
-                p.name project,
-                i.title issue, 
-                u.name, 
-                replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
-                TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
-                from issues i
-                left join projects p on p.id = i.project_id
-                left join timelogs t on t.issue_id = i.id
-                left join users u on u.id = t.user_id
-                left join notes n on n.id = t.note_id
-                where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
-                order by 5, 1, 2''', [year, month, year, month, name]
+        user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
+                order by 4, 1, 2''', [year, month, year, month, name]
         )
     if project is not "" and name is "":
         project = '%' + project + '%'
-        user_spent_on_project = Userspentonprojects.objects.raw(
-            '''select 1 as id,
-                p.name project,
-                i.title issue, 
-                u.name, 
-                replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
-                TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
-                from issues i
-                left join projects p on p.id = i.project_id
-                left join timelogs t on t.issue_id = i.id
-                left join users u on u.id = t.user_id
-                left join notes n on n.id = t.note_id
-                where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
-                order by 5, 1, 2''', [year, month, year, month, project]
+        user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
+                order by 4, 1, 2''', [year, month, year, month, project]
         )
     if project and name is not "":
         project = '%' + project + '%'
         name = '%' + name + '%'
-        user_spent_on_project = Userspentonprojects.objects.raw(
-            '''select 1 as id,
-                p.name project,
-                i.title issue, 
-                u.name, 
-                replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
-                TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
-                from issues i
-                left join projects p on p.id = i.project_id
-                left join timelogs t on t.issue_id = i.id
-                left join users u on u.id = t.user_id
-                left join notes n on n.id = t.note_id
-                where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s and u.name LIKE %s
-                order by 5, 1, 2''', [year, month, year, month, project, name]
+        user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s and u.name LIKE %s
+                order by 4, 1, 2''', [year, month, year, month, project, name]
         )
 
     form = UserSpentOnProjectForm(initial={
         'year': year,
-        'month': month
+        'month': month,
+        'name': name.strip("%"),
+        'project': project.strip("%")
     })
 
     spent_sum = 0
@@ -118,7 +87,14 @@ def track1(request):
 def track2(request):
     year = date.today().year
     month = date.today().month - 1
-    name = ""
+    name = request.GET.get('name', '')
+    sql_query = """select u.name, 
+            ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
+            replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
+            from issues i 
+            left join projects p on p.id = i.project_id  
+            left join timelogs t on t.issue_id = i.id    
+            left join users u on u.id = t.user_id"""
 
     if (request.method == "GET"):
         form = UserSpentForm(request.GET)
@@ -128,39 +104,24 @@ def track2(request):
             month = form.cleaned_data['month']
             name = form.cleaned_data['name']
 
-    user_spent = Userspent.objects.raw(
-        '''select 1 as id,
-            u.name, 
-            ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-            replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-            from issues i 
-            left join projects p on p.id = i.project_id  
-            left join timelogs t on t.issue_id = i.id    
-            left join users u on u.id = t.user_id 
-            where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' 
-            group by 2
-            order by 3 desc''', [year, month, year, month]
+    user_spent = Userspent.objects.raw(sql_query +
+        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' 
+            group by 1
+            order by 2 desc''', [year, month, year, month]
         )
     if name is not "":
         name = '%' + name + '%'
 
-        user_spent = Userspent.objects.raw(
-            '''select 1 as id,
-                u.name, 
-                ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-                replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-                from issues i 
-                left join projects p on p.id = i.project_id  
-                left join timelogs t on t.issue_id = i.id    
-                left join users u on u.id = t.user_id 
-                where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
-                group by 2
-                order by 3 desc''', [year, month, year, month, name]
+        user_spent = Userspent.objects.raw( sql_query +
+            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
+                group by 1
+                order by 2 desc''', [year, month, year, month, name]
         )
 
     form = UserSpentForm(initial={
         'year': year,
-        'month': month
+        'month': month,
+        'name': name.strip("%")
     })
 
     spent_sum = 0
@@ -181,7 +142,16 @@ def track2(request):
 def track3(request):
     year = date.today().year
     month = date.today().month - 1
-    name = ""
+    name = request.GET.get('name', '')
+    sql_query = """select p.name,
+            p.description, 
+            u.email creator, 
+            ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
+            replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
+            from issues i 
+            left join projects p on p.id = i.project_id 
+            left join users u on u.id = p.creator_id  
+            left join timelogs t on t.issue_id = i.id"""
 
     if (request.method == "GET"):
         form = UserSpentForm(request.GET)
@@ -191,43 +161,24 @@ def track3(request):
             month = form.cleaned_data['month']
             name = form.cleaned_data['name']
 
-    project_spent = Projectspent.objects.raw(
-        '''select 1 as id,
-            p.name, 
-            p.description, 
-            u.email creator, 
-            ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-            replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-            from issues i 
-            left join projects p on p.id = i.project_id 
-            left join users u on u.id = p.creator_id  
-            left join timelogs t on t.issue_id = i.id  
-            where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59'
-            group by 2,3,4
-            order by 5 desc''', [year, month, year, month]
+    project_spent = Projectspent.objects.raw(sql_query +
+        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59'
+            group by 1,2,3
+            order by 4 desc''', [year, month, year, month]
         )
     if name is not "":
         name = '%' + name + '%'
 
-        project_spent = Projectspent.objects.raw(
-            '''select 1 as id,
-                p.name, 
-                p.description, 
-                u.email creator, 
-                ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-                replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-                from issues i 
-                left join projects p on p.id = i.project_id 
-                left join users u on u.id = p.creator_id  
-                left join timelogs t on t.issue_id = i.id  
-                where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
-                group by 2,3,4
-                order by 5 desc''', [year, month, year, month, name]
+        project_spent = Projectspent.objects.raw(sql_query +
+            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
+                group by 1,2,3
+                order by 4 desc''', [year, month, year, month, name]
         )
 
     form = ProjectSpentForm(initial={
         'year': year,
-        'month': month
+        'month': month,
+        'name': name.strip("%")
     })
 
     spent_sum = 0
