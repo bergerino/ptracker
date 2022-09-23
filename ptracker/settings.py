@@ -26,8 +26,10 @@ SECRET_KEY = 'django-insecure-_u^)je7kzprmywo(je4(1waf)1__pl=b%&o#%!n_nt74w@nfop
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+# Set to False to allow writes
+SITE_READ_ONLY = True
 
 # Application definition
 
@@ -38,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'trackApp.apps.TrackappConfig'
+    'trackApp.apps.TrackappConfig',
+    'readonly'
 ]
 
 MIDDLEWARE = [
@@ -49,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'readonly.middleware.DatabaseReadOnlyMiddleware',
 ]
 
 ROOT_URLCONF = 'ptracker.urls'
@@ -78,16 +82,16 @@ WSGI_APPLICATION = 'ptracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_NAME'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': 'db',
-        'PORT': 5432,
-        #'NAME': 'gitlabdumptables',
-        #'USER': 'postgres',
-        #'PASSWORD': 'admin',
-        #'HOST': 'localhost',
+        #'NAME': os.environ.get('POSTGRES_NAME'),
+        #'USER': os.environ.get('POSTGRES_USER'),
+        #'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        #'HOST': 'db',
         #'PORT': 5432,
+        'NAME': 'gitlabdumptables',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 

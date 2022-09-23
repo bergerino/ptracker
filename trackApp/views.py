@@ -1,19 +1,27 @@
 from datetime import date
+from multiprocessing import context
+from django.http import HttpResponse
 from django.shortcuts import render
 from .models import Userspentonprojects, Userspent, Projectspent
-from .forms import UserSpentOnProjectForm, UserSpentForm, ProjectSpentForm
+from .forms import UserDetailSelect, UserSpentOnProjectForm, UserSpentForm, ProjectSpentForm
 import calendar
 
 def index(request):
     return render(request, 'trackApp/index.html')
 
 def track1(request):
-    year = date.today().year
-    month = date.today().month - 1
-    name = request.GET.get('name', '')
-    project = request.GET.get('project', '')
+    year = int(request.COOKIES.get('year', str(date.today().year)))
+    month = int(request.COOKIES.get('month', str(date.today().month - 1)))
+    name = request.COOKIES.get('name', '')
+    project = request.COOKIES.get('project', '')
+    if month == 0:
+        month = 12
+
     sql_query = """select p.name project,
-            i.title issue, 
+            p.id projectid,
+            i.title issue,
+            i.id issueid,
+            u.id userid,
             u.name, 
             replace(ROUND(t.time_spent/3600.0, 1)::text, '.', ',') as spent,
             TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy HH24:MI:SS') date_spent, substring(n.note for 300) note
@@ -35,27 +43,27 @@ def track1(request):
 
     user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
         ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59'
-            order by 5''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
+            order by 8''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
     )
     if name is not "" and project is "":
         name = '%' + name + '%'
 
         user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
-            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
-                order by 4, 1, 2''', [year, month, year, month, name]
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and u.name LIKE %s
+                order by 7, 1, 3''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
         )
     if project is not "" and name is "":
         project = '%' + project + '%'
         user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
-            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
-                order by 4, 1, 2''', [year, month, year, month, project]
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and p.name LIKE %s
+                order by 7, 1, 3''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], project]
         )
     if project and name is not "":
         project = '%' + project + '%'
         name = '%' + name + '%'
         user_spent_on_project = Userspentonprojects.objects.raw(sql_query +
-            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s and u.name LIKE %s
-                order by 4, 1, 2''', [year, month, year, month, project, name]
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and p.name LIKE %s and u.name LIKE %s
+                order by 7, 1, 3''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], project, name]
         )
 
     form = UserSpentOnProjectForm(initial={
@@ -75,20 +83,29 @@ def track1(request):
     context = {
         'user_spent_on_project' : user_spent_on_project,
         'form' : form,
-        'name': name,
-        'project': project,
+        'name': name.strip("%"),
+        'project': project.strip("%"),
         'month': month,
         'year': year,
-        'spent_sum' : spent_sum
+        'spent_sum' : round(spent_sum, 2)
     }
 
-    return render(request, 'trackApp/track1.html', context=context)
+    response = render(request, 'trackApp/track1.html', context=context)
+    response.set_cookie('year', year)
+    response.set_cookie('month', month)
+    response.set_cookie('project', project.strip("%"))
+    response.set_cookie('name', name.strip("%"))
+    return response
 
 def track2(request):
-    year = date.today().year
-    month = date.today().month - 1
-    name = request.GET.get('name', '')
-    sql_query = """select u.name, 
+    year = int(request.COOKIES.get('year', str(date.today().year)))
+    month = int(request.COOKIES.get('month', str(date.today().month - 1)))
+    name = request.COOKIES.get('name', '')
+    if month == 0:
+        month = 12
+
+    sql_query = """select u.name,
+            u.id userid,
             ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
             replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
             from issues i 
@@ -105,17 +122,17 @@ def track2(request):
             name = form.cleaned_data['name']
 
     user_spent = Userspent.objects.raw(sql_query +
-        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' 
-            group by 1
-            order by 2 desc''', [year, month, year, month]
+        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' 
+            group by 1, 2
+            order by 3 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
         )
     if name is not "":
         name = '%' + name + '%'
 
         user_spent = Userspent.objects.raw( sql_query +
-            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and u.name LIKE %s
-                group by 1
-                order by 2 desc''', [year, month, year, month, name]
+            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and u.name LIKE %s
+                group by 1, 2
+                order by 3 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
         )
 
     form = UserSpentForm(initial={
@@ -131,19 +148,27 @@ def track2(request):
     context = {
         'user_spent': user_spent,
         'form': form,
-        'name': name,
+        'name': name.strip("%"),
         'month': month,
         'year': year,
-        'spent_sum': spent_sum
+        'spent_sum': round(spent_sum, 2)
     }
 
-    return render(request, 'trackApp/track2.html', context=context)
+    response = render(request, 'trackApp/track2.html', context=context)
+    response.set_cookie('year', year)
+    response.set_cookie('month', month)
+    response.set_cookie('name', name.strip("%"))
+    return response
 
 def track3(request):
-    year = date.today().year
-    month = date.today().month - 1
-    name = request.GET.get('name', '')
+    year = int(request.COOKIES.get('year', str(date.today().year)))
+    month = int(request.COOKIES.get('month', str(date.today().month - 1)))
+    name = request.COOKIES.get('project', '')
+    if month == 0:
+        month = 12
+
     sql_query = """select p.name,
+            p.id projectid,
             p.description, 
             u.email creator, 
             ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
@@ -162,17 +187,17 @@ def track3(request):
             name = form.cleaned_data['name']
 
     project_spent = Projectspent.objects.raw(sql_query +
-        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59'
-            group by 1,2,3
-            order by 4 desc''', [year, month, year, month]
+        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59'
+            group by 1,2,3,4
+            order by 4 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
         )
     if name is not "":
         name = '%' + name + '%'
 
         project_spent = Projectspent.objects.raw(sql_query +
-            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-30 23:59:59' and p.name LIKE %s
-                group by 1,2,3
-                order by 4 desc''', [year, month, year, month, name]
+            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and p.name LIKE %s
+                group by 1,2,3,4
+                order by 4 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
         )
 
     form = ProjectSpentForm(initial={
@@ -188,10 +213,48 @@ def track3(request):
     context = {
         'project_spent': project_spent,
         'form': form,
-        'name': name,
+        'name': name.strip("%"),
         'year': year,
         'month': month,
-        'spent_sum': spent_sum
+        'spent_sum': round(spent_sum, 2)
     }
 
-    return render(request, 'trackApp/track3.html', context=context)
+    response = render(request, 'trackApp/track3.html', context=context)
+    response.set_cookie('year', year)
+    response.set_cookie('month', month)
+    response.set_cookie('project', name.strip("%"))
+    return response
+    
+
+def track4(request):
+    year = int(request.COOKIES.get('year', str(date.today().year)))
+    month = int(request.COOKIES.get('month', str(date.today().month - 1)))
+    name = request.COOKIES.get('name', '')
+    if month == 0:
+        month = 12
+    sql_query = """select u.name,
+        u.id userid,
+        ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
+        replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
+        from issues i 
+        left join projects p on p.id = i.project_id  
+        left join timelogs t on t.issue_id = i.id    
+        left join users u on u.id = t.user_id"""
+
+    if (request.method == "GET"):
+        form = UserDetailSelect(request.GET)
+
+        if form.is_valid():
+            name = form.cleaned_data['name']
+    
+    form = UserDetailSelect(initial={
+        'name': name.strip("%")
+    })
+
+    context = {
+        'name': name.strip("%"),
+        'form': form
+    }
+    
+    response = render(request, 'trackApp/track4.html', context=context)
+    return response

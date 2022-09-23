@@ -10,9 +10,10 @@
 <body>
     <div style="margin-top: 1em" class="container">
         <a href="{% url 'index' %}" class="button-primary">Domů </a>-
-        <a href="{% url 'track1' %}" class="button-primary">Náročnost úkolů </a>-
-        <a href="{% url 'track2' %}" class="button-primary">Odpracovaný čas </a>-
-        <a href="{% url 'track3' %}" class="button-primary">Náročnost projektů </a>
+        <a href="{% url 'track1' %}" class="button-primary">Úkoly </a>-
+        <a href="{% url 'track2' %}" class="button-primary">Zaměstnanci </a>-
+        <a href="{% url 'track3' %}" class="button-primary">Projekty </a>-
+        <a href="{% url 'track4' %}" class="button-primary">Můj přehled </a>
         <div class="heading">
             <h4>Odpracovaný čas</h4>
         </div>
@@ -23,21 +24,21 @@
         </form>
         <div style="padding-top: 2em; padding-bottom: 2em">
             {% if name != "" %}
-                <h5>Přehled zaměstnance {{ name }} v {{ month }}. měsíci {{ year }}:</h5>
+                <h5>Přehled zaměstnance <b>{{ name }}</b> v <b>{{ month }}. měsíci {{ year }}</b>:</h5>
             {% else %}
-                <h5>Přehled o všech zaměstnancích v {{ month }}. měsíci {{ year }}:</h5>
+                <h5>Přehled o všech zaměstnancích v <b>{{ month }}. měsíci {{ year }}</b>:</h5>
             {% endif %}
         </div>
         {% if user_spent %}
             <table id="table1" style="margin-bottom: 9em">
                 <thead>
-                    <th onclick="sortTable(0)">Jméno</th>
-                    <th onclick="sortTable(1)">Strávený čas [h]</th>
+                    <th onclick="sortTable(0)">Jméno <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(1)">Strávený čas [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
                 </thead>
                 <tbody>
                     {% for record in user_spent %}
                         <tr>
-                            <td>{{ record.name }}</td>
+                            <td onclick="clickFilterName('{{record.name}}')">{{ record.name }}</td>
                             <td>{{ record.spent }}</td>
                         </tr>
                     {% endfor %}
@@ -53,11 +54,21 @@
     </div>
 </body>
 <script>
+    function clickFilterName(name){
+        name = name.replace(/\s/g, '+');
+        url = window.location.href.split('?')[0];
+        console.log(url);
+        url = url+"?name=" + name + "&year=" + {{year}} + "&month=" + {{month}};
+        
+        window.location.replace(url);
+    }
+
     function sortTable(n) {
       var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
       table = document.getElementById("table1");
       switching = true;
       dir = "asc";
+      headers = document.getElementsByTagName('th');
       while (switching) {
         switching = false;
         rows = table.rows;
@@ -101,6 +112,14 @@
             switching = true;
           }
         }
+      }
+      headers[0].innerHTML = "Jméno <img src='{% static 'icons8-sorting-30.png' %}' alt='sort' width='15px'>";
+      headers[1].innerHTML = "Strávený čas <img src='{% static 'icons8-sorting-30.png' %}' alt='sort' width='15px'>";
+      if(dir == "asc"){
+          headers[n].innerHTML = headers[n].innerHTML.split('<')[0] + "<img src='{% static 'icons8-ascending-sorting-30.png' %}' alt='sort' width='15px'>"
+      }
+      else if (dir == "desc"){
+          headers[n].innerHTML = headers[n].innerHTML.split('<')[0] + "<img src='{% static 'icons8-descending-sorting-30.png' %}' alt='sort' width='15px'>"
       }
     }
 </script>

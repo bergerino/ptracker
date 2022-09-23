@@ -8,21 +8,24 @@
 from django.db import models
 
 class Projectspent(models.Model):
-    name = models.CharField(max_length=255, blank=False, null=False, primary_key=True)
+    projectid = models.IntegerField(blank=False, null=False, primary_key=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     creator = models.CharField(max_length=255, blank=True, null=True)
     spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
     spent_txt = models.TextField(blank=True, null=True)
+    date_spent = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False  # Created from a view. Don't remove.
         db_table = 'projectspent'
 
-
 class Userspent(models.Model):
-    name = models.CharField(max_length=255, blank=False, null=False, primary_key=True)
+    userid = models.IntegerField(blank=False, null=False, primary_key=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
     spent_txt = models.TextField(blank=True, null=True)
+    date_spent = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False  # Created from a view. Don't remove.
@@ -30,7 +33,10 @@ class Userspent(models.Model):
 
 
 class Userspentonprojects(models.Model):
-    project = models.CharField(max_length=255, blank=False, null=False, primary_key=True)
+    issueid = models.IntegerField(blank=False, null=False, primary_key=True)
+    projectid = models.IntegerField(blank=True, null=True)
+    userid = models.IntegerField(blank=True, null=True)
+    project = models.CharField(max_length=255, blank=True, null=True)
     issue = models.CharField(max_length=255, blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     spent = models.TextField(blank=True, null=True)

@@ -8,17 +8,21 @@
 </head>
 
 <body>
+    <img src={% static 'NAM_SYSTEM.gif' %} height=15%>
     <div style="margin-top: 1em" class="container">
-        <h2 style="text-align: center; margin: auto; padding-top: 2em; padding-bottom: 2em">NAM Work Tracker</h2>
+        <h2 style="text-align: center; margin: auto; padding-top: 0em; padding-bottom: 2em">Work Tracker</h2>
         <div class="row" style="padding-top: 1.5em; padding-bottom: 8em; text-align: center; margin: auto">
-            <div class="four columns">
-                <a href="{% url 'track1' %}" class="button button-primary">Přehled úkolů</a>
+            <div class="three columns">
+                <a href="{% url 'track1' %}" class="button button-secondary">Úkoly</a>
             </div>
-            <div class="four columns">
-                <a href="{% url 'track2' %}" class="button button-primary">Odpracované hodiny</a>
+            <div class="three columns">
+                <a href="{% url 'track2' %}" class="button button-secondary">Zaměstnanci</a>
             </div>
-            <div class="four columns">
-                <a href="{% url 'track3' %}" class="button button-primary">Časová náročnost projektů</a>
+            <div class="three columns">
+                <a href="{% url 'track3' %}" class="button button-secondary">Projekty</a>
+            </div>
+            <div class="three columns">
+                <a href="{% url 'track4' %}" class="button button-secondary">Můj přehled</a>
             </div>
         </div>
 
