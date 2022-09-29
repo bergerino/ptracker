@@ -19,3 +19,5 @@ class ProjectSpentForm(forms.Form):
 
 class UserDetailSelect(forms.Form):
     name = forms.CharField(required=True, label='Zaměstnanec', max_length=100)
+    year = forms.IntegerField( required=True, label='Rok', max_value=date.today().year)
+    month = forms.IntegerField(required=True, min_value=1, max_value=12, label='Měsíc')

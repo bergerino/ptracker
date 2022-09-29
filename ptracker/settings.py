@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Set to False to allow writes
-SITE_READ_ONLY = True
+SITE_READ_ONLY = False
 
 # Application definition
 
@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'trackApp.apps.TrackappConfig',
-    'readonly'
+    'readonly',
+    'mathfilters'
 ]
 
 MIDDLEWARE = [

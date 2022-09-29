@@ -7,6 +7,46 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
+class Daytotaluser(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    userid = models.IntegerField(blank=False, null=False, primary_key=True)
+    spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    date_spent = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False  # Created from a view. Don't remove.
+        db_table = 'daytotaluser'
+
+
+class Issueperdayuser(models.Model):
+    project = models.CharField(max_length=255, blank=True, null=True)
+    projectid = models.IntegerField(blank=True, null=True)
+    issue = models.CharField(max_length=255, blank=True, null=True)
+    issueid = models.IntegerField(blank=False, null=False, primary_key=True)
+    userid = models.IntegerField(blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    date_spent = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False  # Created from a view. Don't remove.
+        db_table = 'issueperdayuser'
+
+
+class Issuetotaluser(models.Model):
+    issue = models.CharField(max_length=255, blank=True, null=True)
+    issueid = models.IntegerField(blank=False, null=False, primary_key=True)
+    project = models.CharField(max_length=255, blank=True, null=True)
+    projectid = models.IntegerField(blank=True, null=True)
+    userid = models.IntegerField(blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+
+    class Meta:
+        managed = False  # Created from a view. Don't remove.
+        db_table = 'issuetotaluser'
+
+
 class Projectspent(models.Model):
     projectid = models.IntegerField(blank=False, null=False, primary_key=True)
     name = models.CharField(max_length=255, blank=True, null=True)
@@ -19,6 +59,7 @@ class Projectspent(models.Model):
     class Meta:
         managed = False  # Created from a view. Don't remove.
         db_table = 'projectspent'
+
 
 class Userspent(models.Model):
     userid = models.IntegerField(blank=False, null=False, primary_key=True)
@@ -33,9 +74,9 @@ class Userspent(models.Model):
 
 
 class Userspentonprojects(models.Model):
-    issueid = models.IntegerField(blank=False, null=False, primary_key=True)
+    issueid = models.IntegerField(blank=True, null=True)
     projectid = models.IntegerField(blank=True, null=True)
-    userid = models.IntegerField(blank=True, null=True)
+    userid = models.IntegerField(blank=False, null=False, primary_key=True)
     project = models.CharField(max_length=255, blank=True, null=True)
     issue = models.CharField(max_length=255, blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)

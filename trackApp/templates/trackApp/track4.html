@@ -4,18 +4,18 @@
     <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/normalize.css' %}">
     <link rel="stylesheet" href="{% static 'Skeleton-2.0.4/css/skeleton.css' %}">
-    <link rel="stylesheet" href="{% static 'custom.css' %}">
 </head>
 
 <body>
     <div style="margin-top: 1em" class="container">
         <a href="{% url 'index' %}" class="button-primary">Domů </a>-
-        <a href="{% url 'track1' %}" class="button-primary">Náročnost úkolů </a>-
-        <a href="{% url 'track2' %}" class="button-primary">Odpracovaný čas </a>-
-        <a href="{% url 'track3' %}" class="button-primary">Náročnost projektů </a>
+        <a href="{% url 'track1' %}" class="button-primary">Úkoly </a>-
+        <a href="{% url 'track2' %}" class="button-primary">Zaměstnanci </a>-
+        <a href="{% url 'track3' %}" class="button-primary">Projekty </a>-
+        <a href="{% url 'track4' %}" class="button-primary">Můj přehled </a>
         {% csrf_token %}
-        <div class="heading">
-            <h4>Detail:<b> {{name}} </b></h4>
+        <div class="heading" style="margin-top:4em; margin-bottom:4em">
+            <h4>Detail<b> {{name}}, {{month}}. měsíc {{year}} </b></h4>
         </div>
         
         {% if name == '' %}
@@ -23,8 +23,66 @@
                 {{ form }}
                 <br><input style="margin-top: 2em" class="button-primary" type="submit" value="Submit" />
             </form>
+            <h4>Zadejte jméno zaměstnance</h4>
         {% else %}
-            <h5>asdas</h5>
-        {% endif %}
+            <form method="get">
+                {{ form }}
+                <br><input style="margin-top: 2em" class="button-primary" type="submit" value="Submit" />
+            </form>
     </div>
+            <p style="margin-top: 3em; margin-bottom: 3em; margin-left: 3em"><b>Celkem hodin za měsíc: </b> {{ month_total }}</p>
+            <table id="table1" style="font-size: 14px; font-family:Arial; margin-bottom: 9em; margin-left: 3em; margin-right: 32em;">
+                <thead>
+                    <th>Projekt</th>
+                    <th style="padding-right: 3em">[h]</th>
+                    <th>Issue</th>
+                    <th>[h]</th>
+                    {% for i in '0123456789012345678901234567890'%}
+                        {% if forloop.counter == 31 %}
+                            <th style="padding-right: 40px;">{{ forloop.counter }}.</th>   
+                        {% else %}
+                            <th>{{ forloop.counter }}.</th>                        
+                        {% endif %}
+                    {% endfor %}
+                </thead>
+                <tbody>
+                    {% for record in project_tuples %}
+                        <tr>
+                            <td rowspan="{{record.1}}" style="padding-right: 2em">{{ record.0 }}</td>
+                            <td rowspan="{{record.1}}"><b>{{record.2}}</b></td>
+                        </tr>
+                        {% for uniqi in unique_issues%}
+                            {% if uniqi.1 == record.0 %}
+                                <tr>
+                                    <td>{{ uniqi.0 }}</td>
+                                    <td><b>{{ uniqi.2 }}</b></td>
+                                    {% for i in '0123456789012345678901234567890'%}
+                                        <td>
+                                            {% for sqlrecord in issue_per_day_user %}
+                                                {% if sqlrecord.issue == uniqi.0 %}
+                                                    {% if sqlrecord.date_spent|slice:2 == forloop.parentloop.counter|stringformat:"02d"%}
+                                                        {{ sqlrecord.spent }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    <tr><td><td><td><td>
+                    {% for i in '0123456789012345678901234567890'%}
+                        <td>
+                            {% for sqlrecord in day_total_user %}
+                                {% if sqlrecord.date_spent|slice:2 == forloop.parentloop.counter|stringformat:"02d"%}
+                                    <b>{{ sqlrecord.spent }}</b>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        {% endif %}
 </body>

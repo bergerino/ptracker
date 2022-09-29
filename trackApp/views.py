@@ -2,9 +2,10 @@ from datetime import date
 from multiprocessing import context
 from django.http import HttpResponse
 from django.shortcuts import render
-from .models import Userspentonprojects, Userspent, Projectspent
+from .models import Daytotaluser, Issueperdayuser, Issuetotaluser, Userspentonprojects, Userspent, Projectspent
 from .forms import UserDetailSelect, UserSpentOnProjectForm, UserSpentForm, ProjectSpentForm
 import calendar
+from collections import Counter
 
 def index(request):
     return render(request, 'trackApp/index.html')
@@ -74,11 +75,8 @@ def track1(request):
     })
 
     spent_sum = 0
-    records_sum = 0
     for record in user_spent_on_project:
-        records_sum = records_sum + 1
         spent_sum = spent_sum + float(record.spent.replace(",", "."))
-    print(records_sum)
 
     context = {
         'user_spent_on_project' : user_spent_on_project,
@@ -232,29 +230,120 @@ def track4(request):
     name = request.COOKIES.get('name', '')
     if month == 0:
         month = 12
-    sql_query = """select u.name,
-        u.id userid,
-        ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-        replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-        from issues i 
-        left join projects p on p.id = i.project_id  
-        left join timelogs t on t.issue_id = i.id    
-        left join users u on u.id = t.user_id"""
+    sql_query_ipdu = """select p.name project,
+            p.id projectid,
+            i.title issue,
+            i.id issueid,
+            u.id userid,
+            u.name,
+            SUM(ROUND(t.time_spent/3600.0, 1)) as spent,
+            TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy') date_spent
+            from issues i
+            left join projects p on p.id = i.project_id
+            left join timelogs t on t.issue_id = i.id
+            left join users u on u.id = t.user_id
+            left join notes n on n.id = t.note_id"""
+    sql_query_itu = """select i.title issue,
+            i.id issueid,
+            p.name project,
+            p.id projectid,
+            u.id userid,
+            u.name,
+            SUM(ROUND(t.time_spent/3600.0, 1)) as spent
+            from issues i
+            left join projects p on p.id = i.project_id
+            left join timelogs t on t.issue_id = i.id
+            left join users u on u.id = t.user_id
+            left join notes n on n.id = t.note_id"""
+    sql_query_dtu = """select u.name,
+            u.id userid,
+            SUM(ROUND(t.time_spent/3600.0, 1)) as spent,
+            TO_CHAR(t.spent_at + interval '2h', 'dd.mm.yyyy') date_spent
+            from issues i
+            left join projects p on p.id = i.project_id
+            left join timelogs t on t.issue_id = i.id
+            left join users u on u.id = t.user_id
+            left join notes n on n.id = t.note_id"""
 
     if (request.method == "GET"):
         form = UserDetailSelect(request.GET)
 
         if form.is_valid():
             name = form.cleaned_data['name']
+            year = form.cleaned_data['year']
+            month = form.cleaned_data['month']
+
+    issue_per_day_user = ""
+    day_total_user = ""
+    issue_total_user = ""
+    if name is not "":
+        name = '%' + name + '%'
+
+        issue_per_day_user = Issueperdayuser.objects.raw(sql_query_ipdu +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s' and u.name LIKE %s
+                group by 2, 4, 5, date_spent''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
+        )
+        day_total_user = Daytotaluser.objects.raw(sql_query_dtu +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s' and u.name LIKE %s
+                group by u.id, date_spent''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
+        )
+        issue_total_user = Issuetotaluser.objects.raw(sql_query_itu +
+            ''' where (t.spent_at + interval '2h') between '%s-%s-01' and '%s-%s-%s' and u.name LIKE %s
+                group by i.id, u.id, p.id;''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
+        )
     
     form = UserDetailSelect(initial={
-        'name': name.strip("%")
+        'year': year,
+        'month': month,
+        'name': name.strip("%"),
     })
 
-    context = {
-        'name': name.strip("%"),
-        'form': form
-    }
+    unique_projects = []
+    unique_issues = []
+    project_tuples = []
+    project_total = 0
+    issue_total = 0
+    month_total = 0
     
+    for record in issue_per_day_user:
+        
+        if record.project not in unique_projects:
+            unique_projects.append(record.project)
+        
+        if (record.issue, record.project, issue_total) not in unique_issues:
+            for record0 in issue_total_user:
+                if record.issue == record0.issue:
+                    issue_total = record0.spent
+            unique_issues.append((record.issue, record.project, issue_total))
+    
+    for record in unique_projects:
+        for record0 in issue_total_user:
+            if record == record0.project:
+                project_total += record0.spent
+        project_tuples.append((record, Counter(elem[1] for elem in unique_issues)[record]+1, project_total))
+        project_total = 0
+
+    for record in issue_total_user:
+        month_total += record.spent
+
+
+    context = {
+        'month_total': month_total,
+        'issue_total_user': issue_total_user,
+        'day_total_user': day_total_user,
+        'issue_per_day_user': issue_per_day_user,
+        'form' : form,
+        'name': name.strip("%"),
+        'month': month,
+        'year': year,
+        'project_tuples': project_tuples,
+        'unique_issues': unique_issues,
+        'month_range': calendar.monthrange(year=year, month=month)[1]
+    }
+
     response = render(request, 'trackApp/track4.html', context=context)
+    response.set_cookie('year', year)
+    response.set_cookie('month', month)
+    response.set_cookie('name', name.strip("%"))
+    
     return response
