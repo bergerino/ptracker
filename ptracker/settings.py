@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Set to False to allow writes
-SITE_READ_ONLY = False
+SITE_READ_ONLY = True
 
 # Application definition
 
@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'trackApp.apps.TrackappConfig',
-    'readonly',
-    'mathfilters'
+    'readonly'
 ]
 
 MIDDLEWARE = [
@@ -83,16 +82,16 @@ WSGI_APPLICATION = 'ptracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.environ.get('POSTGRES_NAME'),
-        #'USER': os.environ.get('POSTGRES_USER'),
-        #'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        #'HOST': 'db',
-        #'PORT': 5432,
-        'NAME': 'gitlabdumptables',
-        'USER': 'postgres',
-        'PASSWORD': 'admin',
-        'HOST': 'localhost',
+        'NAME': os.environ.get('POSTGRES_NAME'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': 'db',
         'PORT': 5432,
+        #'NAME': 'gitlabdumptables',
+        #'USER': 'postgres',
+        #'PASSWORD': 'admin',
+        #'HOST': 'localhost',
+        #'PORT': 5432,
     }
 }
 
