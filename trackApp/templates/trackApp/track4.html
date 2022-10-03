@@ -33,29 +33,41 @@
             <p style="margin-top: 3em; margin-bottom: 3em; margin-left: 3em"><b>Celkem hodin za měsíc: </b> {{ month_total }}</p>
             <table id="table1" style="font-size: 14px; font-family:Arial; margin-bottom: 9em; margin-left: 3em; margin-right: 32em;">
                 <thead>
-                    <th>Projekt</th>
-                    <th style="padding-right: 3em">[h]</th>
-                    <th>Issue</th>
-                    <th>[h]</th>
+                    <td><td><td><td>
                     {% for i in '0123456789012345678901234567890'%}
                         {% if forloop.counter == 31 %}
-                            <th style="padding-right: 40px;">{{ forloop.counter }}.</th>   
+                            <th style="background-color:#ececec;padding-right: 40px;">{{ forloop.counter }}.</th>   
                         {% else %}
-                            <th>{{ forloop.counter }}.</th>                        
+                            <th style="background-color:#ececec">{{ forloop.counter }}.</th>                        
                         {% endif %}
                     {% endfor %}
+                    <tr>
+                        <th style="padding-left: 1em;background-color:#ececec">Projekt</th>
+                        <th style="padding-right: 3em;background-color:#ececec">[h]</th>
+                        <th style="background-color:#ececec">Issue</th>
+                        <th style="border-right:1px solid #ececec;background-color:#ececec">[h]</th>
+                        {% for i in '0123456789012345678901234567890'%}
+                            <td style="background-color:#fafafa">
+                                {% for sqlrecord in day_total_user %}
+                                    {% if sqlrecord.date_spent|slice:2 == forloop.parentloop.counter|stringformat:"02d"%}
+                                        <b>{{ sqlrecord.spent }}</b>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                        </tr>
                 </thead>
                 <tbody>
                     {% for record in project_tuples %}
                         <tr>
-                            <td rowspan="{{record.1}}" style="padding-right: 2em">{{ record.0 }}</td>
+                            <td rowspan="{{record.1}}" style="padding-right: 2em; padding-left:1em">{{ record.0 }}</td>
                             <td rowspan="{{record.1}}"><b>{{record.2}}</b></td>
                         </tr>
                         {% for uniqi in unique_issues%}
                             {% if uniqi.1 == record.0 %}
                                 <tr>
                                     <td>{{ uniqi.0 }}</td>
-                                    <td><b>{{ uniqi.2 }}</b></td>
+                                    <td style="border-right:1px solid #ececec"><b>{{ uniqi.2 }}</b></td>
                                     {% for i in '0123456789012345678901234567890'%}
                                         <td>
                                             {% for sqlrecord in issue_per_day_user %}
@@ -71,17 +83,6 @@
                             {% endif %}
                         {% endfor %}
                     {% endfor %}
-                    <tr><td><td><td><td>
-                    {% for i in '0123456789012345678901234567890'%}
-                        <td>
-                            {% for sqlrecord in day_total_user %}
-                                {% if sqlrecord.date_spent|slice:2 == forloop.parentloop.counter|stringformat:"02d"%}
-                                    <b>{{ sqlrecord.spent }}</b>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                    {% endfor %}
-                    </tr>
                 </tbody>
             </table>
         {% endif %}
