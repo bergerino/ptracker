@@ -82,16 +82,18 @@ WSGI_APPLICATION = 'ptracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_NAME'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': 'db',
-        'PORT': 5432,
-        #'NAME': 'gitlabdumptables',
-        #'USER': 'postgres',
-        #'PASSWORD': 'admin',
-        #'HOST': 'localhost',
+        # NASTAVENI PRO POUZITI V DOCKERU
+        #'NAME': os.environ.get('POSTGRES_NAME'),
+        #'USER': os.environ.get('POSTGRES_USER'),
+        #'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        #'HOST': 'db',
         #'PORT': 5432,
+        # NASTAVENI PRO LOKALNI TESTOVANI
+        'NAME': 'gitlabdumptables',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 

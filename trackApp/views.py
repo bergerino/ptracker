@@ -102,14 +102,25 @@ def track2(request):
     if month == 0:
         month = 12
 
-    sql_query = """select u.name,
-            u.id userid,
-            ROUND(SUM(t.time_spent)/3600.0, 1) as spent,
-            replace(ROUND(SUM(t.time_spent)/3600.0, 1)::text, '.', ',') as spent_txt
-            from issues i 
-            left join projects p on p.id = i.project_id  
-            left join timelogs t on t.issue_id = i.id    
-            left join users u on u.id = t.user_id"""
+    sql_query = """select
+            u.id as user_id,
+            u.name as name_id,
+            SUM(ROUND(t.time_spent/3600.0, 1)) as all_spent,
+            SUM((CASE WHEN 0<(select count(*) from label_links ll left join labels l on l.id=ll.label_id  where ll.target_type='Issue' and ll.target_id = i.id and l.title like 'Type::Request') THEN 1 ELSE 0 END)*ROUND(t.time_spent/3600.0, 1) )
+             AS request,
+            SUM((CASE WHEN 0<(select count(*) from label_links ll left join labels l on l.id=ll.label_id  where ll.target_type='Issue' and ll.target_id = i.id and l.title like 'Type::Bug') THEN 1 ELSE 0 END)*ROUND(t.time_spent/3600.0, 1) )
+             AS bug,
+            SUM((CASE WHEN 0<(select count(*) from label_links ll left join labels l on l.id=ll.label_id  where ll.target_type='Issue' and ll.target_id = i.id and l.title like 'Type::Operational') THEN 1 ELSE 0 END)*ROUND(t.time_spent/3600.0, 1) )
+             AS operational,
+            SUM((CASE WHEN 0<(select count(*) from label_links ll left join labels l on l.id=ll.label_id  where ll.target_type='Issue' and ll.target_id = i.id and l.title like 'Type::Meeting') THEN 1 ELSE 0 END)*ROUND(t.time_spent/3600.0, 1) )
+             AS meeting,
+            SUM((CASE WHEN 0<(select count(*) from label_links ll left join labels l on l.id=ll.label_id  where ll.target_type='Issue' and ll.target_id = i.id and l.title like 'Type::Absence') THEN 1 ELSE 0 END)*ROUND(t.time_spent/3600.0, 1) )
+             AS absence
+
+            from timelogs t
+            left join users u on u.id = t.user_id
+            left join issues i on t.issue_id = i.id
+            left join projects p on p.id = i.project_id"""
 
     if (request.method == "GET"):
         form = UserSpentForm(request.GET)
@@ -120,17 +131,17 @@ def track2(request):
             name = form.cleaned_data['name']
 
     user_spent = Userspent.objects.raw(sql_query +
-        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' 
+        ''' where (t.spent_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' 
             group by 1, 2
-            order by 3 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
+            order by 2 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
         )
     if name is not "":
         name = '%' + name + '%'
 
         user_spent = Userspent.objects.raw( sql_query +
-            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and u.name LIKE %s
+            ''' where (t.spent_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and u.name LIKE %s
                 group by 1, 2
-                order by 3 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
+                order by 2 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
         )
 
     form = UserSpentForm(initial={
@@ -139,9 +150,21 @@ def track2(request):
         'name': name.strip("%")
     })
 
+    columns_sum = (0, 0, 0, 0, 0, 0)
     spent_sum = 0
+    request_sum = 0
+    bug_sum = 0
+    operational_sum = 0
+    meeting_sum = 0
+    absence_sum = 0
     for record in user_spent:
-        spent_sum = spent_sum + float(record.spent)
+        spent_sum = spent_sum + float(record.all_spent)
+        request_sum = request_sum + float(record.request)
+        bug_sum = bug_sum + float(record.bug)
+        operational_sum = operational_sum + float(record.operational)
+        meeting_sum = meeting_sum + float(record.meeting)
+        absence_sum = absence_sum + float(record.absence)
+    columns_sum = (round(spent_sum, 2), round(request_sum, 2), round(bug_sum, 2), round(operational_sum, 2), round(meeting_sum, 2), round(absence_sum, 2))
 
     context = {
         'user_spent': user_spent,
@@ -149,7 +172,7 @@ def track2(request):
         'name': name.strip("%"),
         'month': month,
         'year': year,
-        'spent_sum': round(spent_sum, 2)
+        'columns_sum': columns_sum
     }
 
     response = render(request, 'trackApp/track2.html', context=context)
@@ -185,7 +208,7 @@ def track3(request):
             name = form.cleaned_data['name']
 
     project_spent = Projectspent.objects.raw(sql_query +
-        ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59'
+        ''' where (t.spent_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59'
             group by 1,2,3,4
             order by 4 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1]]
         )
@@ -193,7 +216,7 @@ def track3(request):
         name = '%' + name + '%'
 
         project_spent = Projectspent.objects.raw(sql_query +
-            ''' where (t.created_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and p.name LIKE %s
+            ''' where (t.spent_at  + interval '2h') between '%s-%s-01' and '%s-%s-%s 23:59:59' and p.name LIKE %s
                 group by 1,2,3,4
                 order by 4 desc''', [year, month, year, month, calendar.monthrange(year=year, month=month)[1], name]
         )

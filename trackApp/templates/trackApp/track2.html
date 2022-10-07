@@ -33,18 +33,33 @@
             <table id="table1" style="margin-bottom: 9em">
                 <thead>
                     <th onclick="sortTable(0)">Jméno <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
-                    <th onclick="sortTable(1)">Strávený čas [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(1)">Hodiny celkem [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(2)">Požadavky [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(3)">Bugy [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(4)">Operační [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(5)">Meetingy [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
+                    <th onclick="sortTable(6)">Absence [h] <img src="{% static 'icons8-sorting-30.png' %}" alt="sort" width="15px"></th>
                 </thead>
                 <tbody>
                     {% for record in user_spent %}
                         <tr>
-                            <td onclick="clickFilterName('{{record.name}}')">{{ record.name }}</td>
-                            <td>{{ record.spent }}</td>
+                            <td onclick="clickFilterName('{{record.name_id}}')">{{ record.name_id }}</td>
+                            <td>{{ record.all_spent }}</td>
+                            <td>{{ record.request }}</td>
+                            <td>{{ record.bug }}</td>
+                            <td>{{ record.operational }}</td>
+                            <td>{{ record.meeting }}</td>
+                            <td>{{ record.absence }}</td>
                         </tr>
                     {% endfor %}
                     <tr>
                         <td></td>
-                        <td><b>{{ spent_sum }}</b></td>
+                        <td><b>{{ columns_sum.0 }}</b></td>
+                        <td><b>{{ columns_sum.1 }}</b></td>
+                        <td><b>{{ columns_sum.2 }}</b></td>
+                        <td><b>{{ columns_sum.3 }}</b></td>
+                        <td><b>{{ columns_sum.4 }}</b></td>
+                        <td><b>{{ columns_sum.5 }}</b></td>
                     </tr>
                 </tbody>
             </table>
@@ -76,7 +91,7 @@
           shouldSwitch = false;
           x = rows[i].getElementsByTagName("TD")[n];
           y = rows[i + 1].getElementsByTagName("TD")[n];
-          if(n == 1){
+          if(n > 0){
             if (dir == "asc") {
                 if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
                     shouldSwitch = true;

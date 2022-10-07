@@ -62,11 +62,14 @@ class Projectspent(models.Model):
 
 
 class Userspent(models.Model):
-    userid = models.IntegerField(blank=False, null=False, primary_key=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
-    spent_txt = models.TextField(blank=True, null=True)
-    date_spent = models.DateTimeField(blank=True, null=True)
+    user_id = models.IntegerField(blank=False, null=False, primary_key=True)
+    name_id = models.CharField(max_length=255, blank=True, null=True)
+    all_spent = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    request = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    bug = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    operational = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    meeting = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
+    absence = models.DecimalField(max_digits=65535, decimal_places=65535, blank=True, null=True)
 
     class Meta:
         managed = False  # Created from a view. Don't remove.
