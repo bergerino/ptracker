@@ -1,5 +1,6 @@
 from datetime import date
 from multiprocessing import context
+from urllib import response
 from django.http import HttpResponse
 from django.shortcuts import render
 from .models import Daytotaluser, Issueperdayuser, Issuetotaluser, Userspentonprojects, Userspent, Projectspent
@@ -369,4 +370,8 @@ def track4(request):
     response.set_cookie('month', month)
     response.set_cookie('name', name.strip("%"))
     
+    return response
+
+def fungujes(request):
+    response = HttpResponse('Ano, funguju')
     return response
