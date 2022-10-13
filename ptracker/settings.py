@@ -97,6 +97,27 @@ DATABASES = {
     }
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        'django-error': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+            'backupCount': 10, # keep at most 10 log files
+            'maxBytes': 20971520, # 20 MB
+        },
+    },
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
